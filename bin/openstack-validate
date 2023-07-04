@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import textwrap
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("workspace", default="workspace", nargs='?', help="workspace directory to create. defaults to 'workspace'")
+    return parser.parse_args()
+
+def init(args):
+    resources = os.path.join(
+        os.environ.get("SNAP", "/var/test"), "resources"
+    )
+    heredoc = textwrap.dedent(
+    f"""\
+    WORKSPACE="{args.workspace}"
+    echo "# sudo snap install tempest --channel yoga/stable"
+    echo "# sudo snap install tempestconf --edge"
+    [ -d "$WORKSPACE" ] || tempest init "$WORKSPACE"
+    cp {resources}/* "$WORKSPACE"
+    cd "$WORKSPACE"
+    tempestconf --profile profile.yaml
+    echo "########################################################"
+    echo "#"
+    echo "# A tempest workspace is set up at $WORKSPACE"
+    echo "#"
+    echo "# Quick Start:"
+    echo "# cd $WORKSPACE"
+    echo "# tempest run --load-list smoke"
+    echo "########################################################"
+    """
+    )
+    print(heredoc, end='')
+
+init(parse_args())
